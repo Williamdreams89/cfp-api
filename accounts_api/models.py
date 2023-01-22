@@ -13,7 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     user = models.CharField(max_length=100, choices=UserChoice.choices, default=UserChoice.ADMIN)
     is_active = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    date_added = models.DateField(auto_created=True)
+    date_added = models.DateField(auto_now_add=True)
 
     objects = UserManager()
 
