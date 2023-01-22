@@ -20,7 +20,7 @@ class UserSignUpAPIView(generics.GenericAPIView):
         refresh = RefreshToken.for_user(user)
         current_site = get_current_site(request).domain
         rel_url = reverse("verify-email")
-        abs_url = "{}{}?token={}".format(current_site, rel_url, str(refresh.acess_token))
+        abs_url = "{}{}?token={}".format(current_site, rel_url, str(refresh.access_token))
         email_subject = "Verify Your Email"
         email_body = "Hi {}, \nUse the link below to sign-up to Citizen Feedback Platform:\n{}".format(user.username, abs_url)
         email_to = user.email
