@@ -11,7 +11,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     user = models.CharField(max_length=100, choices=UserChoice.choices, default=UserChoice.ADMIN)
-    is_active = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)
     date_added = models.DateField(auto_now_add=True)
 
