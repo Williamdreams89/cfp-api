@@ -20,5 +20,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
+    def __str__(self):
+        return self.username
+
+    @property
+    def username(self):
+        return self.first_name
+
     class Meta:
         ordering = ["-date_added"]
+
+
