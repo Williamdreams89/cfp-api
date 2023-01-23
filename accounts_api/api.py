@@ -76,7 +76,7 @@ class RequestResetPasswordAPIView(generics.GenericAPIView):
             rel_url = reverse("reset-password", kwargs={"uuidb64": uuidb64,"token": token})
             abs_url = "{}{}".format(current_site, rel_url,)
             email_subject = "Reset Your Password"
-            email_body = "Hi {}, \nUse the link below to sign-up to Citizen Feedback Platform:\n{}".format(user.username, abs_url)
+            email_body = "Hi {}, \nUse the link below to reset your password:\n{}".format(user.username, abs_url)
             email_to = user.email
 
             data = {"email_subject":email_subject, "email_body": email_body, "email_to": email_to}
@@ -89,5 +89,21 @@ class RequestResetPasswordAPIView(generics.GenericAPIView):
 
 class ResetMyPasswordAPIView(generics.GenericAPIView):
     serializer_class = ResetMyPasswordSerializer
-    def post(self, request):
-        pass
+    def post(self, request, uuidb64, token):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception = True)
+        serializer.validated_data
+        try:
+            id = force_str(urlsafe_base64_decode(uuidb64))
+            user = User.objects.get(id = id)
+            
+            if not PasswordResetTokenGenerator().check_token(user, token):
+                return Response("Invalid token", status=status.HTTP_400_BAD_REQUEST)
+            else:
+                user.set_password(serializer.data["new_password"])
+                user.save()
+                return Response("Password Reset Successful !!")
+        except DjangoUnicodeDecodeError as identifier:
+            return Response("Token had been utilized !!!", status=status.HTTP_400_BAD_REQUEST)
+
+        
