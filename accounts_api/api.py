@@ -8,6 +8,11 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 import jwt
 from django.conf import settings
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import smart_bytes, force_str, DjangoUnicodeDecodeError
+
+
 
 
 class UserSignUpAPIView(generics.GenericAPIView):
@@ -52,3 +57,37 @@ class VerifyEmail(views.APIView):
             return Response("Expired token !!", status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
             return Response("Invalid token !!", status=status.HTTP_400_BAD_REQUEST)
+
+    
+class RequestResetPasswordAPIView(generics.GenericAPIView):
+    serializer_class = RequestResetPasswordSerializer
+    def post(self, request):
+        serializer = self.get_serializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        serializer.validated_data
+        if User.objects.filter(email = serializer.data["email"]).exists():
+            user = User.objects.get(email = serializer.data["email"])
+            try:
+                token = PasswordResetTokenGenerator().make_token(user)
+                uuidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            except DjangoUnicodeDecodeError as e:
+                return Response("Invalid token !!!", status=status.HTTP_400_BAD_REQUEST)
+            current_site = get_current_site(request).domain
+            rel_url = reverse("reset-password", kwargs={"uuidb64": uuidb64,"token": token})
+            abs_url = "{}{}".format(current_site, rel_url,)
+            email_subject = "Reset Your Password"
+            email_body = "Hi {}, \nUse the link below to sign-up to Citizen Feedback Platform:\n{}".format(user.username, abs_url)
+            email_to = user.email
+
+            data = {"email_subject":email_subject, "email_body": email_body, "email_to": email_to}
+            Util.send_email(data)
+            return Response(f"Reset Password link sent to {user.email}")
+        else:
+            user= User.objects.get(email=serializer.data["email"])     
+            return Response(f"{user.email} is associated with no account!!", status=status.HTTP_400_BAD_REQUEST)
+
+
+class ResetMyPasswordAPIView(generics.GenericAPIView):
+    serializer_class = ResetMyPasswordSerializer
+    def post(self, request):
+        pass
